@@ -14,37 +14,37 @@ services:
   #       test: ["CMD-SHELL", "pg_isready"]
   #       interval: 10s
   #       timeout: 5s
-  #       retries: 5
+  #       retries: 5 
 #////////////////////////////////////////////////////////////////
-  # backend:
-  #   container_name: backend
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "5000:5000"
-  #   volumes:
-  #     - ./backend:/usr/src/app
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #   networks:
-  #     - trancendance-network
-#////////////////////////////////////////////////////////////////
-  frontend:
-    container_name: frontend
+  backend:
+    container_name: backend
     build:
-      context: ./frontend
-      # dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: dockerfile
     ports:
-      - "3000:3000"
+      - "8000:8000"
     volumes:
-      - /goinfre/asabri/ft-trancendance/fron-end:/frontend
+      - /goinfre/asabri/ft-trancendance/backend:/usr/src/app
     # depends_on:
-    #   - backend
-    #   - db
+    #   db:
+    #     condition: service_healthy
     networks:
       - trancendance-network
+#////////////////////////////////////////////////////////////////
+  # frontend:
+  #   container_name: frontend
+  #   build:
+  #     context: ./frontend
+  #     # dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - /goinfre/asabri/ft-trancendance/fron-end:/frontend
+  #   # depends_on:
+  #   #   - backend
+  #   #   - db
+  #   networks:
+  #     - trancendance-network
 #////////////////////////////////////////////////////////////////
 networks:
   trancendance-network:
