@@ -34,12 +34,12 @@ services:
   frontend:
     container_name: frontend
     build:
-      context: ./fron-end
+      context: ./frontend
       # dockerfile: Dockerfile
     ports:
       - "3000:3000"
     volumes:
-      - /goinfre/asabri/ft-trancendance/fron-end:/app
+      - /goinfre/asabri/ft-trancendance/fron-end:/frontend
     # depends_on:
     #   - backend
     #   - db
