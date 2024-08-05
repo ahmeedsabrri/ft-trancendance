@@ -7,9 +7,6 @@ ENV PYTHONUNBUFFERED 1
 
 RUN apt-get update 
 COPY requirements.txt .
-COPY export-env.py .
-COPY .env .
-RUN /bin/sh -c python export_env.py .env
 RUN python -m venv venv
 RUN . venv/bin/activate
 RUN pip install --upgrade pip

@@ -5,8 +5,8 @@ services:
     build:
       context: ./backend
       dockerfile: dockerfile
-    environment:
-      DATABASE_URL: postgres://${POST_USER}:${POST_PASSWORD}@db:5432/${POST_DB}
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     volumes:
