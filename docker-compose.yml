@@ -1,4 +1,4 @@
-version: '3.8'
+
 services:
   backend:
     container_name: backend
@@ -10,12 +10,13 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - /goinfre/asabri/ft-trancendance/backend:/app
+      - ./backend:/backend
     depends_on:
       - db
     networks:
       - trancendance-network
-#////////////////////////////////////////////////////////////////
+    restart: always
+
   db:
     container_name: postgres
     image: postgres:latest
@@ -29,23 +30,27 @@ services:
       - "5432:5432"
     networks:
       - trancendance-network
-#////////////////////////////////////////////////////////////////
+
   
-  # frontend:
-  #   container_name: frontend
-  #   build:
-  #     context: ./frontend
-  #     # dockerfile: Dockerfile
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - /goinfre/asabri/ft-trancendance/fron-end:/frontend
-  #   # depends_on:
-  #   #   - backend
-  #   #   - db
-  #   networks:
-  #     - trancendance-network
-#////////////////////////////////////////////////////////////////
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      # dockerfile: dockerfile
+      target: dev
+    restart: always
+    command: yarn dev
+    environment:
+      - NODE_ENV=development 
+    volumes:
+      - ./frontend:/frontend
+      - /frontend/node_modules
+      - /frontend/.next
+    ports:
+      - 3000:3000
+    networks:
+      - trancendance-network
+
 networks:
   trancendance-network:
     name: trancendance-network
