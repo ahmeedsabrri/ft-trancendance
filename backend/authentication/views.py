@@ -3,9 +3,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import SlidingToken
 from .serializers import RegisterSerializer, \
-    OuathCallBackSerializer, UserInfoSerializer, UpdateUserSerializer, UpdateUsernameSerializer
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+    OuathCallBackSerializer, UserInfoSerializer, TwoFatorAuthcSerializer
+from rest_framework import status, generics, permissions
+from rest_framework.decorators import api_view
 
 class TestAuthView(APIView):
 
@@ -73,36 +73,23 @@ class UserView(APIView):
         return Response(serializer.data)
 
 
-class UpdateUserView(APIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = UpdateUserSerializer
-    def put(self, request):
-        user = request.user
-        serializer = self.serializer_class(user, data=request.data, partial=True)
-        print(serializer.data.items('username'))
-        if serializer.is_valid():
-            # This will call the update method in serializer
-            updated_user = serializer.save()
+class TwoFaBaseView(generics.GenericAPIView):
+    serializer_class = TwoFatorAuthcSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-            # Return the updated data
-            return Response({
-                'message': 'User updated successfully',
-                'user': {
-                    'first_name': updated_user.first_name,
-                    'last_name': updated_user.last_name,
-                }
-            }, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class UpdateUsernameView(APIView):
-    serializer_class = UpdateUsernameSerializer
-    def put(self, request):
-        username = request.user.username
-        serializer = self.serializer_class(username, data=request.username)
+    def post(self, request):
+        self.context["request"] = request
+        serializer = self.serializer_class(
+            data=request.data,
+            context=self.context,
+        )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({
-                'message': 'User updated successfully',
-            }, status=status.HTTP_200_OK)
+        return Response(serializer.validated_data)
+        pass
+
+class Enable2FAView(TwoFaBaseView):
+    context = {"action": "enable"}
+
+class Disable2FAView(TwoFaBaseView):
+    context = {"action": "disable"}
+    

@@ -1,5 +1,4 @@
 .dockerCommands
 .gitignore
-
-
-
+.env
+backend/.venv/

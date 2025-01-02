@@ -1,6 +1,7 @@
 from datetime import timedelta
 from core.env import env, BASE_DIR
 import os
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangocore.com/en/4.2/howto/deployment/checklist/
 

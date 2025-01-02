@@ -4,11 +4,19 @@ import React, { useState } from 'react';
 import { Shield, Key } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { PasswordChangeForm } from './PasswordChangeForm';
-
-
+import { useUser } from '@/app/context/userContext';
+import { handelTwoFactor } from '@/app/dashboard/setting/action';
+import { useEffect } from 'react';
 export function SecuritySettings() {
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const { user, loading, error } = useUser();
+  const {handleTwoFactorDisable, handleTwoFactorEnable} = handelTwoFactor();
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(user?.twofa_enabled);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  
+  useEffect(() => {
+    setTwoFactorEnabled(user?.twofa_enabled);
+    console.log(user?.twofa_enabled);
+  }, [user]);
   return (
     <>
       <div className="backdrop-blur-md bg-white/10 rounded-lg p-6 space-y-6">
@@ -24,12 +32,12 @@ export function SecuritySettings() {
               <p className="text-gray-300 text-sm">Add an extra layer of security to your account</p>
             </div>
             <button
-              onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
+              onClick={twoFactorEnabled ? handleTwoFactorDisable : handleTwoFactorEnable}
               className={`px-4 py-2 rounded-lg border-2 transition-all 
-              ${(twoFactorEnabled ? 'bg-red/20 hover:bg-red/40 text-red'
+              ${(!twoFactorEnabled ? 'bg-red/20 hover:bg-red/40 text-red'
                   : 'bg-green/20 hover:bg-green/40 text-green')}`}
             >
-              {twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+              {!twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
             </button>
           </div>
 

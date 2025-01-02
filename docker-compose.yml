@@ -44,8 +44,8 @@ services:
       - NODE_ENV=development 
     volumes:
       - ./frontend:/frontend
-      - /frontend/node_modules
-      - /frontend/.next
+      - /frontend/node_modules/
+      - /frontend/.next/
     ports:
       - 3000:3000
     networks:

@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from requests_oauthlib import OAuth2Session
 from django.conf import settings
 import random
-
+import pyotp
 User = get_user_model()
 
 
@@ -18,6 +18,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
+        otp_base32 = pyotp.random_base32()
         user = User.objects.create_user(**validated_data)
         return user
 
@@ -66,35 +67,21 @@ class UserInfoSerializer(serializers.ModelSerializer):
         model = User
         fields = '__all__'
 
+class TwoFatorAuthcSerializer(serializers.Serializer):
+    otp_code = serializers.CharField(
+        max_length=6, min_length=6, required=True, write_only=True
+    )
 
-class UpdateUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('first_name', 'last_name', 'password')
-        extra_kwargs = {
-            'password': {'write_only': True},
-            'first_name': {'required': False},
-            'last_name': {'required': False}
+    def validate(self, attrs):
+        self.user = self.context["request"].user
+        if not self.user.verify_otp(attrs["otp_code"]):
+            raise serializers.ValidationError({"otp_code": "Invalid OTP code!"})
+
+        if self.context["action"] == "enable":
+            self.user.twofa_enabled = True
+        else:
+            self.user.twofa_enabled = False
+        self.user.save()
+        return {
+            "message": f"successfully {self.context['action']}d two factor authentication"
         }
-
-    def update(self, instance, validated_data):
-        # Get each field from validated_data, or keep existing value if not provided
-        instance.first_name = validated_data.get('first_name', instance.first_name)
-        instance.last_name = validated_data.get('last_name', instance.last_name)
-
-        # Only update password if provided
-        if 'password' in validated_data:
-            instance.set_password(validated_data['password'])
-
-        # Save the changes to database
-        instance.save()
-        return instance
-
-class UpdateUsernameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = '__all__'
-    def update(self, instance, validated_data):
-        instance.username = validated_data.get('username', instance.username)
-        instance.save()
-        return instance

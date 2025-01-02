@@ -1,4 +1,3 @@
-'use client'
 
 import {
     createContext,
@@ -17,6 +16,8 @@ import {
     first_name?: string;
     last_name?: string;
     avatar?: string;
+    twofa_enabled?: boolean;
+    friends?: User[];
     // Add other user fields as needed
   }
   
