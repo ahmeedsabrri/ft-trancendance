@@ -4,17 +4,18 @@ from requests_oauthlib import OAuth2Session
 from django.conf import settings
 import random
 import pyotp
+
 User = get_user_model()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'username', 'email', 'password')
+        fields = ("first_name", "last_name", "username", "email", "password")
         extra_kwargs = {
-            'first_name': {'required': True},
-            'last_name': {'required': True},
-            'email': {'required': True},
+            "first_name": {"required": True},
+            "last_name": {"required": True},
+            "email": {"required": True},
         }
 
     def create(self, validated_data):
@@ -33,7 +34,7 @@ class OuathCallBackSerializer(serializers.Serializer):
         )
         _ = oauth.fetch_token(
             token_url="https://api.intra.42.fr/oauth/token",
-            code=attrs['code'],
+            code=attrs["code"],
             client_secret=settings.OAUTH_CLIENT_SECRET,
         )
 
@@ -42,11 +43,11 @@ class OuathCallBackSerializer(serializers.Serializer):
         user_info_json = user_info.json()
 
         return {
-            'username': user_info_json['login'],
-            'email': user_info_json['email'],
-            'first_name': user_info_json['first_name'],
-            'last_name': user_info_json['last_name'],
-            'avatar': user_info_json['image']["link"],
+            "username": user_info_json["login"],
+            "email": user_info_json["email"],
+            "first_name": user_info_json["first_name"],
+            "last_name": user_info_json["last_name"],
+            "avatar": user_info_json["image"]["link"],
         }
 
     def unique_unique_username(self, username):
@@ -55,9 +56,9 @@ class OuathCallBackSerializer(serializers.Serializer):
         return username
 
     def create(self, validated_data):
-        username = self.unique_unique_username(validated_data['username'])
-        validated_data['username'] = username
-        email = validated_data.pop('email')
+        username = self.unique_unique_username(validated_data["username"])
+        validated_data["username"] = username
+        email = validated_data.pop("email")
         user, _ = User.objects.get_or_create(email=email, defaults={**validated_data})
         return user
 
@@ -65,7 +66,13 @@ class OuathCallBackSerializer(serializers.Serializer):
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["otp_uri"] = instance.get_otp_uri()
+        return data
+
 
 class TwoFatorAuthcSerializer(serializers.Serializer):
     otp_code = serializers.CharField(
@@ -78,10 +85,28 @@ class TwoFatorAuthcSerializer(serializers.Serializer):
             raise serializers.ValidationError({"otp_code": "Invalid OTP code!"})
 
         if self.context["action"] == "enable":
-            self.user.twofa_enabled = True
+            self.user.enable_2fa()
         else:
-            self.user.twofa_enabled = False
-        self.user.save()
+            self.user.disable_2fa()
         return {
             "message": f"successfully {self.context['action']}d two factor authentication"
         }
+
+
+from rest_framework_simplejwt.serializers import TokenObtainSlidingSerializer
+
+
+class MyTokenObtainSerializer(TokenObtainSlidingSerializer):
+    otp_code = serializers.CharField(write_only=True, required=False)
+
+    def validate(self, attrs):
+        otp_code = attrs.get("otp_code", None)
+        data = super().validate(attrs)
+        if self.user.twofa_enabled:
+            if not otp_code:
+                raise serializers.ValidationError(
+                    {"otp_code": "this field is required"}
+                )
+            elif not self.user.verify_otp(otp_code):
+                raise serializers.ValidationError({"otp_code": "OTPCode is not valid"})
+        return data

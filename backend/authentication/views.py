@@ -73,6 +73,7 @@ class UserView(APIView):
         return Response(serializer.data)
 
 
+
 class TwoFaBaseView(generics.GenericAPIView):
     serializer_class = TwoFatorAuthcSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -85,11 +86,10 @@ class TwoFaBaseView(generics.GenericAPIView):
         )
         serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data)
-        pass
+
 
 class Enable2FAView(TwoFaBaseView):
     context = {"action": "enable"}
 
 class Disable2FAView(TwoFaBaseView):
     context = {"action": "disable"}
-    
